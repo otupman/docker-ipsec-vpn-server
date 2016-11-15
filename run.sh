@@ -58,6 +58,10 @@ case "$VPN_IPSEC_PSK $VPN_USER $VPN_PASSWORD" in
     ;;
 esac
 
+RIGHT_NET=${RIGHT_NET:-"10.0.1.0/16"}
+RIGHT_ALLOCATION=${RIGHT_ALLOCATION:-"10.0.1.10-10.0.1.100"}
+RIGHT_IP=${RIGHT_IP:-"10.0.1.1"}
+
 echo
 echo 'Trying to auto discover IPs of this server...'
 
@@ -141,8 +145,8 @@ cat > /etc/xl2tpd/xl2tpd.conf <<'EOF'
 port = 1701
 
 [lns default]
-ip range = 192.168.42.10-192.168.42.250
-local ip = 192.168.42.1
+ip range = ${RIGHT_ALLOCATION}
+local ip = ${RIGHT_IP}
 require chap = yes
 refuse pap = yes
 require authentication = yes
@@ -217,15 +221,15 @@ iptables -I INPUT 5 -p udp --dport 1701 -j DROP
 iptables -I FORWARD 1 -m conntrack --ctstate INVALID -j DROP
 iptables -I FORWARD 2 -i eth+ -o ppp+ -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
 iptables -I FORWARD 3 -i ppp+ -o eth+ -j ACCEPT
-iptables -I FORWARD 4 -i ppp+ -o ppp+ -s 192.168.42.0/24 -d 192.168.42.0/24 -j ACCEPT
-iptables -I FORWARD 5 -i eth+ -d 192.168.43.0/24 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
-iptables -I FORWARD 6 -s 192.168.43.0/24 -o eth+ -j ACCEPT
+iptables -I FORWARD 4 -i ppp+ -o ppp+ -s $RIGHT_NET -d $RIGHT_NET -j ACCEPT
+iptables -I FORWARD 5 -i eth+ -d $RIGHT_NET -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+iptables -I FORWARD 6 -s $RIGHT_NET -o eth+ -j ACCEPT
 # Uncomment if you wish to disallow traffic between VPN clients themselves
-# iptables -I FORWARD 2 -i ppp+ -o ppp+ -s 192.168.42.0/24 -d 192.168.42.0/24 -j DROP
-# iptables -I FORWARD 3 -s 192.168.43.0/24 -d 192.168.43.0/24 -j DROP
+# iptables -I FORWARD 2 -i ppp+ -o ppp+ -s $RIGHT_NET -d $RIGHT_NET -j DROP
+# iptables -I FORWARD 3 -s $RIGHT_NET -d $RIGHT_NET -j DROP
 iptables -A FORWARD -j DROP
-iptables -t nat -I POSTROUTING -s 192.168.43.0/24 -o eth+ -m policy --dir out --pol none -j SNAT --to-source "$PRIVATE_IP"
-iptables -t nat -I POSTROUTING -s 192.168.42.0/24 -o eth+ -j SNAT --to-source "$PRIVATE_IP"
+iptables -t nat -I POSTROUTING -s $RIGHT_NET -o eth+ -m policy --dir out --pol none -j SNAT --to-source "$PRIVATE_IP"
+iptables -t nat -I POSTROUTING -s $RIGHT_NET -o eth+ -j SNAT --to-source "$PRIVATE_IP"
 
 # Update file attributes
 chmod 600 /etc/ipsec.secrets /etc/ppp/chap-secrets /etc/ipsec.d/passwd
