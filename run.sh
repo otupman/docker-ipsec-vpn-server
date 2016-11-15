@@ -140,7 +140,7 @@ $PUBLIC_IP  %any  : PSK "$VPN_IPSEC_PSK"
 EOF
 
 # Create xl2tpd config
-cat > /etc/xl2tpd/xl2tpd.conf <<'EOF'
+cat > /etc/xl2tpd/xl2tpd.conf <<EOF
 [global]
 port = 1701
 
