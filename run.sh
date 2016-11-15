@@ -119,7 +119,7 @@ conn l2tp-psk
 conn xauth-psk
   auto=add
   leftsubnet=0.0.0.0/0
-  rightaddresspool=192.168.43.10-192.168.43.250
+  rightaddresspool=$RIGHT_ALLOCATION
   modecfgdns1=8.8.8.8
   modecfgdns2=8.8.4.4
   leftxauthserver=yes
@@ -145,8 +145,8 @@ cat > /etc/xl2tpd/xl2tpd.conf <<'EOF'
 port = 1701
 
 [lns default]
-ip range = ${RIGHT_ALLOCATION}
-local ip = ${RIGHT_IP}
+ip range = $RIGHT_ALLOCATION
+local ip = $RIGHT_IP
 require chap = yes
 refuse pap = yes
 require authentication = yes
